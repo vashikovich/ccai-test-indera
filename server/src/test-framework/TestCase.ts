@@ -23,7 +23,7 @@ export class TestCase {
     const steps: string[] = [];
     const assertTrue = (value: boolean) => {
       if (!value) {
-        throw "Errdawdwaor";
+        throw "Error";
       }
     };
     let isFailed = false;
@@ -34,6 +34,7 @@ export class TestCase {
     } catch (error) {
       isFailed = true;
       failReason = error;
+      steps[steps.length - 1] = "[FAILED] " + steps[steps.length - 1];
     } finally {
       await context.close();
       await browser.close();

@@ -13,7 +13,7 @@ export const generateResultsCsv = async (
       name,
       results[name].status,
       results[name].steps.join(", "),
-      results[name].resultDesc,
+      results[name].resultDesc.trim(),
     ].join("|")
   );
   const content = [header, ...data].join("\n");

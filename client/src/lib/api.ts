@@ -23,9 +23,11 @@ export const fetchResultsCsv = async (testId: string): Promise<void> => {
   var fileName = response.headers
     .get("content-disposition")
     ?.split("filename=")[1]
-    .split(";")[0];
-  console.log(fileName);
-  const file = new File([blob], fileName ?? "file");
-  const fileUrl = window.URL.createObjectURL(file);
-  window.location.assign(fileUrl);
+    .split(";")[0]
+    .replaceAll('"', "");
+  const fileUrl = window.URL.createObjectURL(blob);
+  let a = document.createElement("a");
+  a.href = fileUrl;
+  a.download = fileName ?? "";
+  a.click();
 };

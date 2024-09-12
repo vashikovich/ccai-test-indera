@@ -46,7 +46,9 @@ export default () => {
         await page.getByRole("link", { name: "Download" }).click();
         // const download = await downloadPromise;
         // assertTrue(Boolean(await download.path()));
-        // should also check details of downloaded file
+
+        // TODO: Should check if file is downloaded
+        // TODO: Should also check details of downloaded file, e.g., resolution and format
       }
     ),
     new TestCase(
@@ -75,9 +77,29 @@ export default () => {
         );
       }
     ),
-    // new TestCase(
-    //   "It should not success uploading above 4GB",
-    //   async (page, steps, assertTrue) => {}
-    // ),
+    new TestCase(
+      "It should fail uploading above 4GB",
+      async (page, steps, assertTrue) => {
+        steps.push("Open page");
+        await page.goto("https://video-converter.com/");
+        assertTrue(
+          await page
+            .getByRole("link", { name: "Video Converter online" })
+            .isVisible()
+        );
+        assertTrue(await page.locator("#upload_button").isVisible());
+
+        steps.push("Choose file to upload");
+        await page.locator("#upload_button").click();
+        await page
+          .locator("input[type='file']")
+          .setInputFiles("./src/test-suites/samples/LargeFile.mp4");
+
+        steps.push("Shows error message");
+        assertTrue(
+          await page.getByText("File is too large", { exact: true }).isVisible()
+        );
+      }
+    ),
   ]);
 };

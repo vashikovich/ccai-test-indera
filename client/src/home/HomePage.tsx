@@ -14,7 +14,8 @@ import { useRef, useState } from "react";
 import styles from "./HomePage.module.css";
 import { fetchResultsCsv, fetchTestResults, postStartTest } from "../lib/api";
 import { TestResult } from "../lib/definitions";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+
+import TestResultAccordion from "./TestResultAccordion";
 
 export default function HomePage() {
   const [testId, setTestId] = useState<string | null>(null);
@@ -65,70 +66,17 @@ export default function HomePage() {
           )}
         </Box>
       </Box>
+
       <Box>
         {testResults &&
           Object.keys(testResults).map((testName) => {
             const result = testResults[testName];
             return (
-              <Accordion className={styles.accordion} key={testName}>
-                <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Box className={styles.accordionSummary}>
-                    <Typography>{testName}</Typography>{" "}
-                    <Typography
-                      className={`${styles.statusText} ${
-                        styles[`statusText_${result.status}`]
-                      }`}
-                    >
-                      {result.status}
-                      {result.status === "RUNNING" ? (
-                        <CircularProgress size={15} sx={{ ml: 1 }} />
-                      ) : (
-                        ""
-                      )}
-                    </Typography>
-                  </Box>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <Box className={styles.accordionDetails}>
-                    <Box className={styles.statusDetails}>
-                      <Typography className={styles.detailsTitle}>
-                        Status
-                      </Typography>
-                      <Typography
-                        className={`${styles.statusText} ${
-                          styles[`statusText_${result.status}`]
-                        }`}
-                      >
-                        {result.status}
-                      </Typography>
-                    </Box>
-
-                    <Box className={styles.textDetails}>
-                      <Typography className={styles.detailsTitle}>
-                        Description
-                      </Typography>
-                      <Typography className={styles.desc}>
-                        {result.resultDesc}
-                      </Typography>
-                    </Box>
-
-                    <Box className={styles.textDetails}>
-                      <Typography className={styles.detailsTitle}>
-                        Steps
-                      </Typography>
-                      <List className={styles.list}>
-                        {result.steps.map((step) => (
-                          <ListItem className={styles.listItem} key={step}>
-                            <Typography className={styles.desc}>
-                              {step}
-                            </Typography>
-                          </ListItem>
-                        ))}
-                      </List>
-                    </Box>
-                  </Box>
-                </AccordionDetails>
-              </Accordion>
+              <TestResultAccordion
+                result={result}
+                testName={testName}
+                key={testName}
+              />
             );
           })}
       </Box>
