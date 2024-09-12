@@ -5,7 +5,7 @@ import { TestSuite } from "../../test-framework/TestSuite";
 export default () => {
   return new TestSuite("Video Converter", [
     new TestCase(
-      "It successfully uploads mp4 > avi, HD",
+      "It successfully uploads mp4 > avi in HD",
       async (page, steps, assertTrue) => {
         steps.push("Open page");
         await page.goto("https://video-converter.com/");
@@ -49,10 +49,32 @@ export default () => {
         // should also check details of downloaded file
       }
     ),
-    // new TestCase(
-    //   "It should not success using YouTube video",
-    //   async (page, steps, assertTrue) => {}
-    // ),
+    new TestCase(
+      "It should fail using YouTube video",
+      async (page, steps, assertTrue) => {
+        steps.push("Open page");
+        await page.goto("https://video-converter.com/");
+        assertTrue(
+          await page
+            .getByRole("link", { name: "Video Converter online" })
+            .isVisible()
+        );
+
+        steps.push("Click and input URL link");
+        await page.locator("#open_link").click();
+        page.on("dialog", (dialog) => {
+          assertTrue(dialog.message() === "Open file from URL");
+          dialog.accept("https://www.youtube.com/watch?v=aWk2XZ_8IhA");
+        });
+
+        steps.push("Shows error message");
+        assertTrue(
+          await page
+            .getByText("Unable to open file", { exact: true })
+            .isVisible()
+        );
+      }
+    ),
     // new TestCase(
     //   "It should not success uploading above 4GB",
     //   async (page, steps, assertTrue) => {}

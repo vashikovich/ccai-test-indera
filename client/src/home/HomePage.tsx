@@ -4,6 +4,7 @@ import {
   AccordionSummary,
   Box,
   Button,
+  CircularProgress,
   Container,
   List,
   ListItem,
@@ -11,50 +12,65 @@ import {
 } from "@mui/material";
 import { useRef, useState } from "react";
 import styles from "./HomePage.module.css";
-import { fetchTestResults, postStartTest } from "../lib/api";
+import { fetchResultsCsv, fetchTestResults, postStartTest } from "../lib/api";
 import { TestResult } from "../lib/definitions";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 export default function HomePage() {
+  const [testId, setTestId] = useState<string | null>(null);
   const [testResults, setTestResults] = useState<Record<
     string,
     TestResult
   > | null>(null);
+  const [isTestRunning, setIsTestRunning] = useState(false);
 
   const poller = useRef<NodeJS.Timer>();
-  const isTestRunning = Boolean(poller.current);
 
   const startTest = async () => {
     const { id, results } = await postStartTest();
+    setTestId(id);
     setTestResults(results);
+    setIsTestRunning(true);
 
     poller.current = setInterval(async () => {
-      const results = await fetchTestResults(id);
+      const { results } = await fetchTestResults(id);
       setTestResults(results);
       if (Object.values(results).every((r) => r.status !== "RUNNING")) {
         clearInterval(poller.current);
+        setIsTestRunning(false);
       }
     }, 1000);
+  };
+
+  const downloadCsv = async () => {
+    if (testId) await fetchResultsCsv(testId);
   };
 
   return (
     <Container className={styles.container}>
       <Box className={styles.header}>
         <Typography variant="h4">Video Converter Website</Typography>
-        <Button
-          variant="contained"
-          onClick={startTest}
-          disabled={isTestRunning}
-        >
-          Start Test
-        </Button>
+        <Box className={styles.buttonContainer}>
+          <Button
+            variant="contained"
+            onClick={startTest}
+            disabled={isTestRunning}
+          >
+            {isTestRunning ? "Running" : "Start Test"}
+          </Button>
+          {!isTestRunning && testResults && (
+            <Button variant="contained" color="success" onClick={downloadCsv}>
+              Download CSV
+            </Button>
+          )}
+        </Box>
       </Box>
       <Box>
         {testResults &&
           Object.keys(testResults).map((testName) => {
             const result = testResults[testName];
             return (
-              <Accordion className={styles.accordion}>
+              <Accordion className={styles.accordion} key={testName}>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                   <Box className={styles.accordionSummary}>
                     <Typography>{testName}</Typography>{" "}
@@ -64,6 +80,11 @@ export default function HomePage() {
                       }`}
                     >
                       {result.status}
+                      {result.status === "RUNNING" ? (
+                        <CircularProgress size={15} sx={{ ml: 1 }} />
+                      ) : (
+                        ""
+                      )}
                     </Typography>
                   </Box>
                 </AccordionSummary>
@@ -97,7 +118,7 @@ export default function HomePage() {
                       </Typography>
                       <List className={styles.list}>
                         {result.steps.map((step) => (
-                          <ListItem className={styles.listItem}>
+                          <ListItem className={styles.listItem} key={step}>
                             <Typography className={styles.desc}>
                               {step}
                             </Typography>

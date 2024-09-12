@@ -3,7 +3,7 @@ import { TestCase } from "./TestCase";
 import { v4 as uuid } from "uuid";
 import { setTestSuiteResult } from "../caching/test-results";
 
-type Result = {
+export type Result = {
   status: "RUNNING" | "PASSED" | "FAILED";
   steps: string[];
   resultDesc: string;
@@ -50,7 +50,7 @@ export class TestSuite {
 
   updateResults(testName: string, results: Result) {
     this.results[testName] = results;
-    setTestSuiteResult(this.id, this.results);
+    setTestSuiteResult(this.id, this.name, this.results);
   }
 
   run() {

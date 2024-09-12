@@ -12,6 +12,11 @@
   align-items: center;
 }
 
+.buttonContainer {
+  display: flex;
+  gap: 10px;    
+}
+
 .accordion {
   display: flex;
   flex-direction: column;
