@@ -1,15 +1,20 @@
 import express, { Express, Request, Response } from "express";
 import dotenv from "dotenv";
-import { getVideoConverterTestSuite } from "./test-suites/video-converter";
+import testSuite from "./test-suites/video-converter/test-suite";
+import { getTestSuiteResult } from "./caching/test-results";
 
 dotenv.config();
 
 const app: Express = express();
 const port = process.env.PORT || 3000;
 
-app.get("/", async (req: Request, res: Response) => {
-  const results = await getVideoConverterTestSuite().run();
-  res.send(results);
+app.get("/test-suite/check/:id", async (req: Request, res: Response) => {
+  res.send(getTestSuiteResult(req.params.id));
+});
+
+app.post("/test-suite/run", async (req: Request, res: Response) => {
+  const info = testSuite().run();
+  res.send(info);
 });
 
 app.listen(port, () => {

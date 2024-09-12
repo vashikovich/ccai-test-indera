@@ -1,22 +1,34 @@
 import { GenerativeModel, GoogleGenerativeAI } from "@google/generative-ai";
 import { TestCase } from "./TestCase";
+import { v4 as uuid } from "uuid";
+import { setTestSuiteResult } from "../caching/test-results";
+
+type Result = {
+  status: "RUNNING" | "PASSED" | "FAILED";
+  steps: string[];
+  resultDesc: string;
+};
 
 export class TestSuite {
   name: string;
-  testCases: TestCase[];
-  results: Record<
-    string,
-    { status: string; steps: string[]; resultDesc: string }
-  >;
+  id: string;
+  tests: TestCase[];
   genModel: GenerativeModel;
 
-  constructor(name: string, testCases: TestCase[]) {
+  public results: Record<string, Result>;
+
+  constructor(name: string, tests: TestCase[]) {
     this.name = name;
-    this.testCases = testCases;
+    this.id = uuid();
+    this.tests = tests;
     this.results = {};
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY ?? "");
     this.genModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+  }
+
+  get testNames() {
+    return this.tests.map((test) => test.name);
   }
 
   async generateResultDesc(
@@ -36,12 +48,24 @@ export class TestSuite {
     return result.response.text();
   }
 
-  async run() {
-    await Promise.all(
-      this.testCases.map(async (test) => {
+  updateResults(testName: string, results: Result) {
+    this.results[testName] = results;
+    setTestSuiteResult(this.id, this.results);
+  }
+
+  run() {
+    Promise.all(
+      this.tests.map(async (test) => {
+        this.updateResults(test.name, {
+          status: "RUNNING",
+          steps: [],
+          resultDesc: "",
+        });
+
         const { passed, steps, failReason } = await test.run();
         const status = passed ? "PASSED" : "FAILED";
-        this.results[test.name] = {
+
+        this.updateResults(test.name, {
           status,
           steps,
           resultDesc: await this.generateResultDesc(
@@ -50,11 +74,11 @@ export class TestSuite {
             steps,
             failReason
           ),
-        };
+        });
       })
     );
 
-    return this.results;
+    return { id: this.id, results: this.results };
   }
 }
 
