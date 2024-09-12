@@ -1,12 +1,15 @@
 import express, { Express, Request, Response } from "express";
 import dotenv from "dotenv";
+import cors from "cors";
 import testSuite from "./test-suites/video-converter/test-suite";
 import { getTestSuiteResult } from "./caching/test-results";
 
 dotenv.config();
 
 const app: Express = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3001;
+
+app.use(cors());
 
 app.get("/test-suite/check/:id", async (req: Request, res: Response) => {
   res.send(getTestSuiteResult(req.params.id));
